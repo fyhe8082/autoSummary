@@ -70,7 +70,7 @@ class get_documents(object):
     #pass
     
     def first_filter(self, paragraphs):
-        """return paragraphs with a meaningfull paragraph as the first paragraph"""
+        """return paragraphs with a meaningful paragraph as the first paragraph"""
         pass
     
     

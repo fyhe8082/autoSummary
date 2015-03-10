@@ -53,7 +53,7 @@ class ThreadClass(threading.Thread):
 
     def run(self):
         for text in self.documents_list:
-            document = get_documents(text)
+            document = Document(text)
             summary = document.get_summary(5)
             filename = text.split('\\')[-1]
             filename = filename[:filename.index(".")]

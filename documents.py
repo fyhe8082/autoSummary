@@ -2,49 +2,84 @@
 #coding=utf-8
 import re,codecs
 
-synatx_after_serialnum = u".,、。，"
-format_paragraph_style = []
-chinese_num = u"一二三四五六七八九十"
 
-for i in range(10):
-    a = []
-    format_paragraph_style.append(a)
-    a.append(u"第"+chinese_num[i])
-    a.append(chinese_num[i])
-    a.append(str(i+1))
+format_paragraph_serialnum = []
+synatx_after_serialnum = u".,、。，"
+
+def set_format_paragraph_serialnum():
+    chinese_num = u"一二三四五六七八九十"
     
-class get_documents(object):
-    '''输入路径初始化，处理一个路径下的所有文档，兼容各种文档格式
-               处理后可以直接获得的相应的的数据，如token、分句结果、分词结果、
-               输出由下列函数实现'''
+    for i in range(10):
+        a = []
+        format_paragraph_serialnum.append(a)
+        a.append(u"第"+chinese_num[i])
+        a.append(chinese_num[i])
+        a.append(str(i+1))
+
+set_format_paragraph_serialnum()
+
+class Document(object):
             
     def __init__(self, filename):
-        '''输入处理路径初始化，得到字符串类型的文档集合documents'''
         with codecs.open(filename, "r", "utf-8") as file:
             stream = file.read()
             self.filename = filename[:filename.index(".")]
             self.paragraphs = cut_paragraph(stream)
-            #self.paragraphs = last_filter(first_filter(cut_paragraph(stream)))
+            #self.paragraphs = del_footpart(del_headpart(cut_paragraph(stream)))
             self.sentences = cut_sentence(self.paragraphs)
             self.summary = []
+
+    def get_summary(self, num):
+        """return num sentences for the summarization"""
+        if self.get_formatpart():
+            if len(self.summary) < num:
+                num = len(self.summary)
+            return ('.').join(self.summary[:num])
             
-    def last_filter(self, paragraphs):
+    def del_footpart(self, paragraphs):
         """return paragraphs without attachment(except the paper only be a attachment)
              and cut anything after date or lots of dash"""
+        paras = []
+        #paragraphs = paragraphs.strip()
+        flag = 0
+        tag_1 = 0  #用来标记是否匹配到chara里的字符
+        tag_2 = 0  #用来标记是否匹配到落款中的日期
+        #tag_3 = 0  #用来匹配各种附件的情况
+        chara = "'――'".decode('utf8')
+        for paragraph in paragraphs:
+            #print paragraph
+            if (tag_1 == 1) or (tag_2 == 1):
+                break 
+            #print paragraph
+            for char_1 in paragraph:     #1.匹配'――'符号
+                if char_1 in chara:
+                    print 1 
+                    tag_1 = 1
+                    break 
+            if re.match(u'\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5',paragraph):    #2.简洁版本的正则表达式匹配年月日
+            #if re.match(u'\d{4}[\u4e00-\u9fa5]\d{1,2}[\u4e00-\u9fa5]\d{1,2}[\u4e00-\u9fa5]',paragraph):     #此处只匹配了阿拉伯数字的日期如1987年8月7日 未匹配"一九九二年九月八日"模式的中文
+                print 2
+                tag_2 = 1
+            if flag <=5:                      #匹配'附件'
+                if re.match(u'\u9644\u4ef6\d+',paragraph):
+                    return paragraphs
+    
+            paras.append(paragraph)
+            flag += 1
+        return paras
+    
+    def del_headpart(self, paragraphs):
+        """return paragraphs with a meaningful paragraph as the first paragraph"""
         pass
     
-    def first_filter(self, paragraphs):
-        """return paragraphs with a meaningfull paragraph as the first paragraph"""
-        pass
     
-    
-    def paragraph_format_detect(self):
+    def get_formatpart(self):
         """return yes or no (1 or 0). 
             if the answer is yes modify the self.summary being the summarization """
-        global format_paragraph_style
+        global format_paragraph_serialnum
         i = 0
         for paragraph in self.paragraphs:
-            if paragraph[0] in format_paragraph_style[i]:
+            if paragraph[0] in format_paragraph_serialnum[i]:
                 i += 1
                 paragraph = paragraph[1:]
                 if paragraph[0] in synatx_after_serialnum:
@@ -58,12 +93,6 @@ class get_documents(object):
         else:
             return 0
     
-    def get_summary(self, num):
-        """return num sentences for the summarization"""
-        if self.paragraph_format_detect():
-            if len(self.summary) < num:
-                num = len(self.summary)
-            return ('.').join(self.summary[:num])
     
 def cut_paragraph(stream):
     paragraph = []
@@ -74,11 +103,7 @@ def cut_paragraph(stream):
         for part in re.split("\s\s+",segment):
             if part == u"":
                 continue
-            paragraph.append(part)
-    #pa = []
-    #for ww in paragraph:
-        #ww = ww.replace("\n","")
-        #pa.append(ww)  
+            paragraph.append(part) 
     return paragraph
 
 def cut_sentence(paragraph):
@@ -126,7 +151,7 @@ def cut_sentence(paragraph):
 
 
 def main():
-    document = get_documents("14.txt")
+    document = Document("14.txt")
     text = document.get_summary(5)
     print text
     
