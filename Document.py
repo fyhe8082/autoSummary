@@ -6,7 +6,7 @@ import re,codecs
 format_paragraph_serialnum = []
 synatx_after_serialnum = u".,、。，"
 
-def set_format_paragraph_serialnum():
+def init_format_paragraph_serialnum():
     chinese_num = u"一二三四五六七八九十"
     
     for i in range(10):
@@ -16,7 +16,7 @@ def set_format_paragraph_serialnum():
         a.append(chinese_num[i])
         a.append(str(i+1))
 
-set_format_paragraph_serialnum()
+init_format_paragraph_serialnum()
 
 class Document(object):
             
